@@ -9,12 +9,18 @@ return {
     end,
 
     spec = {
-      { "<leader>c", group = "[C]ode", mode = { "n", "x" } },
-      { "<leader>d", group = "[D]ocument" },
+      {
+        "<leader>c",
+        group = "[C]ode",
+        mode = { "n", "x" },
+        icon = require("nvim-web-devicons").get_icon("file", "txt"),
+      },
       { "<leader>r", group = "[R]ename" },
+      { "<leader>d", group = "[D]iagnostics" },
       { "<leader>s", group = "[S]earch" },
-      { "<leader>w", group = "[W]orkspace" },
       { "<leader>t", group = "[T]oggle" },
+      { "<leader>q", group = "[Q]uickfix" },
+      { "<leader>f", group = "[F]iles" },
       { "<leader>v", group = "Love2D" },
     },
     win = { -- see `:help api-win_config`

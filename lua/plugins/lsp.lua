@@ -1,5 +1,61 @@
 local settings = require("settings")
 
+local function get_jdtls_root()
+  local root_markers = { ".git", "mvnw", "gradlew", "pom.xml", "build.gradle" }
+  return vim.fs.root(0, root_markers)
+end
+
+local function get_jdtls_cmd()
+  local home = vim.fn.getenv("HOME")
+
+  local project_name = vim.fn.fnamemodify(get_jdtls_root(), ":p:h:t")
+  local workspace_dir = home .. "/.cache/jdtls/workspace" .. project_name
+
+  local mason_packages = require("mason.settings").current.install_root_dir .. "/packages"
+
+  local jdtls_path = mason_packages .. "/jdtls"
+  local jdebug_path = mason_packages .. "/java-debug-adapter"
+  local jtest_path = mason_packages .. "/java-test"
+
+  local config_type = "/config_mac" .. (vim.uv.os_uname().machine == "x86_64" and "" or "_arm")
+  local config_path = jdtls_path .. config_type
+  local lombok_path = mason_packages .. "/lombok-nightly/lombok.jar"
+
+  local jar_path = jdtls_path .. "/plugins/org.eclipse.equinox.launcher_1.6.900.v20240613-2009.jar"
+
+  local bundles = {
+    vim.fn.glob(jdebug_path .. "/extension/server/com.microsoft.java.debug.plugin-*.jar", true),
+  }
+  vim.list_extend(bundles, vim.split(vim.fn.glob(jtest_path .. "/extension/server/*.jar", true), "\n"))
+
+  return {
+    -- NOTE: you must set $JAVA_HOME to `/usr/libexec/java_home -v 21`
+    vim.fn.getenv("JAVA_HOME") .. "/bin/java",
+
+    "-Declipse.application=org.eclipse.jdt.ls.core.id1",
+    "-Dosgi.bundles.defaultStartLevel=4",
+    "-Declipse.product=org.eclipse.jdt.ls.core.product",
+    "-Dlog.protocol=true",
+    "-Dlog.level=ALL",
+    "-Xmx1g",
+    "-javaagent:" .. lombok_path,
+    "--add-modules=ALL-SYSTEM",
+    "--add-opens",
+    "java.base/java.util=ALL-UNNAMED",
+    "--add-opens",
+    "java.base/java.lang=ALL-UNNAMED",
+
+    "-jar",
+    jar_path,
+
+    "-configuration",
+    config_path,
+
+    "-data",
+    workspace_dir,
+  }
+end
+
 return {
   -- Main LSP Configuration
   "neovim/nvim-lspconfig",
@@ -10,6 +66,9 @@ return {
     },
     "williamboman/mason-lspconfig.nvim",
     "WhoIsSethDaniel/mason-tool-installer.nvim",
+
+    "mfussenegger/nvim-dap",
+    "jay-babu/mason-nvim-dap.nvim",
 
     { -- Status updates, notifications
       "j-hui/fidget.nvim",
@@ -38,7 +97,7 @@ return {
       },
     },
     "hrsh7th/cmp-nvim-lsp",
-    "nvim-java/nvim-java",
+    "mfussenegger/nvim-jdtls",
   },
   config = function()
     vim.api.nvim_create_autocmd("LspAttach", {
@@ -53,8 +112,8 @@ return {
         map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
         map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
         map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
-        map("<leader>ds", require("telescope.builtin").lsp_document_symbols, "[D]ocument [S]ymbols")
-        map("<leader>ws", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[W]orkspace [S]ymbols")
+        map("<leader>cd", require("telescope.builtin").lsp_document_symbols, "[C]ode [D]ocument symbols")
+        map("<leader>cw", require("telescope.builtin").lsp_dynamic_workspace_symbols, "[C]ode [W]orkspace symbols")
         map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
 
         -- Usually apply to errors
@@ -140,7 +199,49 @@ return {
           },
         },
       },
-      jdtls = {},
+      jdtls = {
+        cmd = get_jdtls_cmd(),
+        root_dir = get_jdtls_root(),
+        filetypes = { "java" },
+        handlers = require("lspconfig.configs.jdtls").default_config.handlers,
+        settings = {
+          java = {
+            references = {
+              includeDecompiledSources = true,
+            },
+            format = {
+              enabled = false,
+            },
+            eclipse = {
+              downloadSources = true,
+            },
+            maven = {
+              downloadSources = true,
+            },
+            signatureHelp = {
+              enabled = true,
+            },
+            filteredTypes = {
+              "com.sun.*",
+              "io.micrometer.shaded.*",
+              "java.awt.*",
+              "sun.*",
+            },
+            importOrder = {
+              "java",
+              "javax",
+              "com",
+              "org",
+            },
+          },
+          sources = {
+            organizeImports = {
+              starThreshold = 9999,
+              staticStarThreshold = 9999,
+            },
+          },
+        },
+      },
       gopls = {},
       yamlls = { -- NOTE: requires `yarn`
         settings = {
@@ -152,7 +253,7 @@ return {
       cssls = {}, -- NOTE: requires `npm`
       html = {},
       harper_ls = { -- check grammar
-        filetypes = { "markdown" },
+        filetypes = "markdown",
       },
     }
 
@@ -164,6 +265,10 @@ return {
         width = settings.window.width,
         height = settings.window.height,
       },
+      registries = {
+        "github:mason-org/mason-registry",
+        "github:nvim-java/mason-registry",
+      },
     })
 
     -- tools beyond lspconfig for mason to install
@@ -172,6 +277,9 @@ return {
       "stylua",
       "google-java-format",
       "prettier",
+      "java-debug-adapter",
+      "java-test",
+      "lombok-nightly",
     })
     require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
@@ -183,7 +291,17 @@ return {
           server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
           require("lspconfig")[server_name].setup(server)
         end,
+        ["jdtls"] = function(_)
+          -- no-op, use autocommand instead for java
+        end,
       },
+    })
+
+    vim.api.nvim_create_autocmd("FileType", {
+      pattern = "java",
+      callback = function()
+        require("jdtls").start_or_attach(servers.jdtls)
+      end,
     })
   end,
 }

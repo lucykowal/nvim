@@ -23,25 +23,6 @@ return { -- collection of various small independent plugins/modules
     -- - gcc - comment line
     require("mini.comment").setup()
 
-    -- welcome screen
-    local starter = require("mini.starter")
-    starter.setup({
-      items = {
-        {
-          { action = "Telescope find_files", name = "Files", section = "Telescope" },
-          { action = "Telescope live_grep", name = "Live grep", section = "Telescope" },
-          { action = "Telescope command_history", name = "Command history", section = "Telescope" },
-        },
-      },
-      header = function()
-        local handle = io.popen("fortune") or {}
-        local fortune = handle:read("*a")
-        handle:close()
-        fortune = fortune:gsub("\n", "\n")
-        return "Hi Lucy.\n\n" .. fortune
-      end,
-    })
-
     -- statusline
     local function get_line(accent)
       return function()

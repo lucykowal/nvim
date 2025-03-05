@@ -43,11 +43,27 @@ vim.o.list = true
 vim.opt.listchars = { tab = "| ", trail = "·", nbsp = "␣", extends = "→", precedes = "←" }
 vim.opt.cursorline = true
 vim.o.scrolloff = 30
+vim.o.shortmess = "ltToOCFI"
+
+vim.diagnostic.config({
+  virtual_text = {
+    virt_text_pos = "eol",
+  },
+})
 
 -- keymaps
 -- see `:help vim.keymap`
+vim.keymap.set("n", "<leader>dl", function()
+  vim.ui.select(vim.diagnostic.severity, { prompt = "Virtual Text Diagnostic Level:" }, function(sel)
+    vim.diagnostic.config({ virtual_text = { severity = sel } })
+  end)
+end, { desc = "Set [D]iagnostic [L]evel" })
+
+vim.keymap.set("n", "<leader>dd", function()
+  vim.diagnostic.enable(not vim.diagnostic.is_enabled())
+end, { desc = "Toggle [D]iagnostics [D]" })
+
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
-vim.keymap.set("n", "<leader>q", vim.diagnostic.setloclist, { desc = "Open diagnostic [Q]uickfix list" })
 vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
 vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })

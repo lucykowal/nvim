@@ -1,6 +1,12 @@
 -- plugins.lua: plugin specs
 local settings = require("settings")
 
+-- for quicker
+vim.keymap.set("n", "<leader>qd", function()
+  vim.call("setqflist", vim.diagnostic.toqflist(vim.diagnostic.get(0)))
+  require("quicker").open()
+end, { desc = "[Q]uickfix [D]iagnostics" })
+
 -- all plugins/*.lua get merged with this return spec
 return {
   { -- detect tabstop and shiftwidth automatically
@@ -39,7 +45,7 @@ return {
     opts = {
       notify_on_error = true,
       format_on_save = {
-        timeout_ms = 500,
+        timeout_ms = 800,
         lsp_format = "fallback",
       },
       formatters_by_ft = {
@@ -86,5 +92,23 @@ return {
         },
       },
     },
+  },
+  { -- improved quickfix
+    "stevearc/quicker.nvim",
+    event = "FileType qf",
+    config = function()
+      require("quicker").setup({
+        edit = {
+          enabled = false,
+        },
+        constrain_cursor = true,
+      })
+      vim.keymap.set("n", "<leader>qf", function()
+        require("quicker").toggle()
+      end, { desc = "Toggle [Q]uick[F]ix" })
+      vim.keymap.set("n", "<leader>qd", function()
+        require("quicker").toggle({ loclist = true })
+      end, { desc = "Toggle [Q]uickfix [D]iagnostics" })
+    end,
   },
 }

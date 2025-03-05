@@ -6,20 +6,23 @@ return { -- telescope, incredibly powerful fuzzy finder
   branch = "0.1.x",
   dependencies = {
     "nvim-lua/plenary.nvim",
-    {
+    { -- faster fuzzy find
       "nvim-telescope/telescope-fzf-native.nvim",
       build = "make",
       cond = function()
         return vim.fn.executable("make") == 1
       end,
     },
-    { "nvim-telescope/telescope-ui-select.nvim" },
+    { -- file browser
+      "nvim-telescope/telescope-file-browser.nvim",
+    },
+    { -- replace ui-select
+      "nvim-telescope/telescope-ui-select.nvim",
+    },
     { "nvim-tree/nvim-web-devicons", enabled = vim.g.have_nerd_font },
-
     { -- supercollider docs
       "davidgranstrom/telescope-scdoc.nvim",
     },
-
     { -- recent/frequent files
       "nvim-telescope/telescope-frecency.nvim",
       -- install the latest stable version
@@ -100,6 +103,7 @@ return { -- telescope, incredibly powerful fuzzy finder
     -- enable extensions if they are installed
     pcall(telescope.load_extension, "fzf")
     pcall(telescope.load_extension, "ui-select")
+    pcall(telescope.load_extension, "file_browser")
     pcall(telescope.load_extension, "frecency")
     pcall(telescope.load_extension, "scdoc")
 
@@ -126,5 +130,13 @@ return { -- telescope, incredibly powerful fuzzy finder
         prompt_title = "Live Grep in Open Files",
       })
     end, { desc = "[S]earch [/] in Open Files" })
+
+    vim.keymap.set("n", "<leader>fb", telescope.extensions.file_browser.file_browser, { desc = "[F]ile [B]rowser" })
+    vim.keymap.set("n", "<leader>ff", function()
+      telescope.extensions.file_browser.file_browser({
+        path = vim.fn.expand("%:p:h"),
+        select_buffer = true,
+      })
+    end, { desc = "[F]ile browser at [F]ile" })
   end,
 }

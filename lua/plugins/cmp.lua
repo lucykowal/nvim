@@ -31,10 +31,8 @@ return { -- autocomplete
         })
       end,
     },
-    {
-      "zbirenbaum/copilot-cmp",
-      config = true,
-    },
+
+    "zbirenbaum/copilot-cmp",
     "saadparwaiz1/cmp_luasnip",
     "hrsh7th/cmp-nvim-lsp",
     "hrsh7th/cmp-path",
