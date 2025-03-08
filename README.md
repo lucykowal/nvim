@@ -1,7 +1,15 @@
 # lucy's dotfiles
 
 everything is catppuccin latte. i'd explore other themes but i like how
-catppuccin has pretty reliable ready-to-go configs for almost everything.
+catppuccin has pretty reliable ready-to-go configs for almost everything. i have
+made some changes, though. the background is dimmed slightly, using the `colors`
+module from the `catppuccin` neovim plugin. overriding in neovim and tmux
+doesn't require changing the plugins, but i did have to modify the alacritty
+theme.
+
+the following commands assume you've put this repository in your home directory,
+`~/dotfiles`. if that's not the case, specify home as the target with `-t ~`,
+for example, `stow -t ~ nvim`.
 
 ### neovim
 
@@ -23,8 +31,7 @@ copilot integration for chat and completions, supercollider support,
 **to-do**:
 
 - improve handling of supercollider help buffers
-- evaluate value of floating terminal v.s. built-in `:term`
-- spell/grammar fixes: toggle spell and tie to harper
+- fork Copilot Chat to make some UI tweaks
 
 ### zsh
 
@@ -46,15 +53,21 @@ current terminal emulator. kiss.
 
 ### tmux
 
-beforehand, install plugins:
-
 ```shell
-mkdir -p ~/.config/tmux/plugins/catppuccin
-git clone -b v2.1.2 https://github.com/catppuccin/tmux.git ~/.config/tmux/plugins/catppuccin/tmux
+stow -t ~ tmux
 ```
 
-then, stow:
+i'm using the [catppuccin theme](https://github.com/catppuccin/tmux). normally
+you'd keep this as a git repository, but i'm tracking it locally so that it
+plays nice with `stow`.
 
-```shell
-stow -t ~ -S tmux
+i have a slightly modified key mapping set up to emulate something between
+`zellij` and `vim`:
+
+```
+C-g           - leader
+C-g [h|j|k|l] - to left/below/above/right pane
+C-g s         - split pane
+C-g v         - vsplit pane
+M-\           - open floating terminal
 ```

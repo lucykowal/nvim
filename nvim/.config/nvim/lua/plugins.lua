@@ -117,4 +117,11 @@ return {
       end, { desc = "Toggle [Q]uickfix [D]iagnostics" })
     end,
   },
+  {
+    "lucykowal/windowtest.nvim",
+    cond = vim.uv.os_uname().machine ~= "x86_64",
+    opts = {},
+    lazy = false,
+    dev = true,
+  },
 }

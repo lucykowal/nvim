@@ -9,6 +9,6 @@ end_of_line = lf
 insert_final_newline = true
 
 # 2 space indentation
-[{*.lua,*.toml}]
+[{*.lua,*.toml,*.sh}]
 indent_style = space
 indent_size = 2

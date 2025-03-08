@@ -1,0 +1,15 @@
+# This is Git's per-user configuration file.
+[user]
+	name = lucykowal
+	email = 72417420+lucykowal@users.noreply.github.com
+[core]
+	editor = /opt/homebrew/bin/nvim
+[init]
+	defaultBranch = main
+[push]
+	autoSetupRemote = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
